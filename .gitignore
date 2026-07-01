@@ -1,0 +1,14 @@
+# Ignore data directory containing large downloaded datasets
+data/
+scratch/
+
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
