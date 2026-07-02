@@ -275,55 +275,33 @@ def build_transfermarkt_squad_features(
             return squad_cache[key]
             
         if country not in players_by_country:
+            squad_cache[key] = {}
             return {}
             
         country_players = players_by_country[country]
         
-        # Determine player value and age for the year
-        rows = []
-        for _, p in country_players.iterrows():
-            p_id = p["player_id"]
-            dob = p["date_of_birth"]
-            
-            # Skip if player doesn't have a valid DOB
-            if pd.isna(dob):
-                continue
-                
-            age = year - dob.year
-            # Filter to typical active international ages (17 to 38)
-            if age < 17 or age > 38:
-                continue
-                
-            # Get value
-            value = player_val_dict.get((p_id, year), np.nan)
-            if pd.isna(value):
-                # Fallback to current value if no yearly value found
-                value = p["market_value_in_eur"]
-            if pd.isna(value) or value <= 0:
-                value = 50000.0 # small default for professional players
-                
-            # Get caps
-            caps = player_caps_dict.get((p_id, year), 0)
-            # Get form
-            form = player_form_dict.get((p_id, year), 0.0)
-            
-            rows.append({
-                "value": value,
-                "age": age,
-                "caps": caps,
-                "form": form
-            })
-            
-        if not rows:
+        # Determine player value and age for the year vectorially
+        dob_years = country_players["date_of_birth"].dt.year
+        age = year - dob_years
+        valid_mask = (age >= 17) & (age <= 38)
+        df_active = country_players[valid_mask].copy()
+        
+        if len(df_active) == 0:
+            squad_cache[key] = {}
             return {}
             
-        df_active = pd.DataFrame(rows)
+        # Get values, caps, and form vectorially
+        p_ids = df_active["player_id"].values
+        df_active["value"] = [player_val_dict.get((pid, year), np.nan) for pid in p_ids]
+        df_active["value"] = df_active["value"].fillna(df_active["market_value_in_eur"]).fillna(50000.0)
+        
+        df_active["caps"] = [player_caps_dict.get((pid, year), 0) for pid in p_ids]
+        df_active["form"] = [player_form_dict.get((pid, year), 0.0) for pid in p_ids]
+        df_active["age"] = year - df_active["date_of_birth"].dt.year
+        
         # Sort by value to find the top 23 (squad)
         df_active = df_active.sort_values(by="value", ascending=False).head(23)
         
-        if len(df_active) == 0:
-            return {}
-            
         total_value = df_active["value"].sum()
         avg_value = df_active["value"].mean()
         avg_age = df_active["age"].mean()
@@ -480,74 +458,61 @@ def compute_qualification_features(df_fixtures: pd.DataFrame) -> pd.DataFrame:
     print("Computing qualification features...")
     df = df_fixtures.copy()
     
-    # Pre-calculate qualification stats for each team and year
-    # For a year Y, we look at qualification matches in years Y-2 to Y
-    qual_cache = {}
-    
     # Filter to only qualification matches
     df_qual = df[df["tournament"].str.contains("qualification|qualifying", case=False, na=False)].copy()
+    
+    # 1. Melt df_qual to get team-level qualification matches
+    rows = []
+    for prefix in ["home_", "away_"]:
+        opp_prefix = "away_" if prefix == "home_" else "home_"
+        df_p = df_qual[[
+            "date", 
+            f"{prefix}team_standardized", 
+            f"{opp_prefix}team_standardized",
+            f"{prefix}score", 
+            f"{opp_prefix}score",
+            "tournament"
+        ]].copy()
+        df_p.columns = ["date", "team", "opponent", "score_for", "score_against", "tournament"]
+        df_p["is_playoff"] = df_p["tournament"].str.contains("play-off|playoff", case=False, na=False).astype(float)
+        rows.append(df_p)
+    df_qual_melt = pd.concat(rows, ignore_index=True).dropna(subset=["score_for", "score_against"])
+    df_qual_melt["year"] = df_qual_melt["date"].dt.year
+    df_qual_melt["gd"] = df_qual_melt["score_for"] - df_qual_melt["score_against"]
+    df_qual_melt["points"] = np.select(
+        [df_qual_melt["score_for"] > df_qual_melt["score_against"], df_qual_melt["score_for"] == df_qual_melt["score_against"]],
+        [3.0, 1.0],
+        default=0.0
+    )
+    
+    # Group by team
+    qual_by_team = {team: grp for team, grp in df_qual_melt.groupby("team")}
+    
+    qual_cache = {}
     
     def get_qual_stats(team: str, year: int) -> Dict:
         key = (team, year)
         if key in qual_cache:
             return qual_cache[key]
             
-        # Filter qualification matches in the 3-year window [year-2, year]
-        cycle_matches = df_qual[
-            (df_qual["date"].dt.year >= year - 2) & 
-            (df_qual["date"].dt.year <= year) & 
-            ((df_qual["home_team_standardized"] == team) | (df_qual["away_team_standardized"] == team))
-        ]
-        
-        if len(cycle_matches) == 0:
+        if team not in qual_by_team:
+            qual_cache[key] = {}
             return {}
             
-        wins = 0
-        draws = 0
-        losses = 0
-        gd = 0.0
-        points = 0.0
-        played_playoff = 0.0
+        grp = qual_by_team[team]
+        # Filter qualification matches in the 3-year window [year-2, year] vectorially
+        cycle_matches = grp[(grp["year"] >= year - 2) & (grp["year"] <= year)]
         
-        for _, m in cycle_matches.iterrows():
-            h_team = m["home_team_standardized"]
-            h_score = m["home_score"]
-            a_score = m["away_score"]
-            tourn = m["tournament"]
+        if len(cycle_matches) == 0:
+            qual_cache[key] = {}
+            return {}
             
-            if "play-off" in tourn.lower() or "playoff" in tourn.lower():
-                played_playoff = 1.0
-                
-            if pd.isna(h_score) or pd.isna(a_score):
-                continue
-                
-            if h_team == team:
-                gd += (h_score - a_score)
-                if h_score > a_score:
-                    wins += 1
-                    points += 3.0
-                elif h_score == a_score:
-                    draws += 1
-                    points += 1.0
-                else:
-                    losses += 1
-            else:
-                gd += (a_score - h_score)
-                if a_score > h_score:
-                    wins += 1
-                    points += 3.0
-                elif a_score == h_score:
-                    draws += 1
-                    points += 1.0
-                else:
-                    losses += 1
-                    
         total = len(cycle_matches)
         stats = {
-            "qual_ppg": points / total,
-            "qual_gd": gd / total,
-            "qual_win_rate": wins / total,
-            "qual_played_playoff": played_playoff
+            "qual_ppg": cycle_matches["points"].sum() / total,
+            "qual_gd": cycle_matches["gd"].sum() / total,
+            "qual_win_rate": (cycle_matches["points"] == 3.0).sum() / total,
+            "qual_played_playoff": float(cycle_matches["is_playoff"].max() > 0)
         }
         qual_cache[key] = stats
         return stats

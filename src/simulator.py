@@ -157,7 +157,7 @@ class WorldCupSimulator:
                     
         return sorted_teams[:2]
 
-    def simulate_tournament(self, team_profiles: Dict[str, Dict[str, Any]]) -> Dict[str, str]:
+    def simulate_tournament(self, team_profiles: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Runs a single full tournament simulation (Group + Knockout).
         Returns a dictionary mapping:
@@ -167,6 +167,11 @@ class WorldCupSimulator:
             - "semis": List[str]
             - "quarters": List[str]
             - "r16": List[str]
+            - "r16_matches": List[Dict]
+            - "qf_matches": List[Dict]
+            - "sf_matches": List[Dict]
+            - "third_place_match": Dict
+            - "final_match": Dict
         """
         # 1. Group Stage
         advancing_teams = {} # group -> [1st, 2nd]
@@ -191,9 +196,17 @@ class WorldCupSimulator:
         ]
         
         r16_winners = []
+        r16_matches = []
         for ta, tb in r16_matchups:
-            _, _, winner = self.simulate_match(ta, tb, team_profiles, is_knockout=True)
+            ga, gb, winner = self.simulate_match(ta, tb, team_profiles, is_knockout=True)
             r16_winners.append(winner)
+            r16_matches.append({
+                "home": ta,
+                "away": tb,
+                "home_goals": ga,
+                "away_goals": gb,
+                "winner": winner
+            })
             
         # 3. Quarterfinals
         qf_matchups = [
@@ -204,9 +217,17 @@ class WorldCupSimulator:
         ]
         
         qf_winners = []
+        qf_matches = []
         for ta, tb in qf_matchups:
-            _, _, winner = self.simulate_match(ta, tb, team_profiles, is_knockout=True)
+            ga, gb, winner = self.simulate_match(ta, tb, team_profiles, is_knockout=True)
             qf_winners.append(winner)
+            qf_matches.append({
+                "home": ta,
+                "away": tb,
+                "home_goals": ga,
+                "away_goals": gb,
+                "winner": winner
+            })
             
         # 4. Semifinals
         sf_matchups = [
@@ -216,17 +237,41 @@ class WorldCupSimulator:
         
         sf_winners = []
         sf_losers = []
+        sf_matches = []
         for ta, tb in sf_matchups:
-            _, _, winner = self.simulate_match(ta, tb, team_profiles, is_knockout=True)
+            ga, gb, winner = self.simulate_match(ta, tb, team_profiles, is_knockout=True)
             sf_winners.append(winner)
             sf_losers.append(ta if winner == tb else tb)
+            sf_matches.append({
+                "home": ta,
+                "away": tb,
+                "home_goals": ga,
+                "away_goals": gb,
+                "winner": winner
+            })
             
         # 5. Third-place Playoff
-        _, _, third_place = self.simulate_match(sf_losers[0], sf_losers[1], team_profiles, is_knockout=True)
+        ta_3rd, tb_3rd = sf_losers[0], sf_losers[1]
+        ga_3rd, gb_3rd, third_place = self.simulate_match(ta_3rd, tb_3rd, team_profiles, is_knockout=True)
+        third_place_match = {
+            "home": ta_3rd,
+            "away": tb_3rd,
+            "home_goals": ga_3rd,
+            "away_goals": gb_3rd,
+            "winner": third_place
+        }
         
         # 6. Final
-        _, _, champion = self.simulate_match(sf_winners[0], sf_winners[1], team_profiles, is_knockout=True)
-        runner_up = sf_winners[0] if champion == sf_winners[1] else sf_winners[1]
+        ta_f, tb_f = sf_winners[0], sf_winners[1]
+        ga_f, gb_f, champion = self.simulate_match(ta_f, tb_f, team_profiles, is_knockout=True)
+        runner_up = ta_f if champion == tb_f else tb_f
+        final_match = {
+            "home": ta_f,
+            "away": tb_f,
+            "home_goals": ga_f,
+            "away_goals": gb_f,
+            "winner": champion
+        }
         
         return {
             "champion": champion,
@@ -234,5 +279,11 @@ class WorldCupSimulator:
             "third_place": third_place,
             "semis": sf_winners + sf_losers,
             "quarters": qf_winners,
-            "r16": r16_winners
+            "r16": r16_winners,
+            "r16_matches": r16_matches,
+            "qf_matches": qf_matches,
+            "sf_matches": sf_matches,
+            "third_place_match": third_place_match,
+            "final_match": final_match
         }
+

@@ -1,0 +1,1841 @@
+{% raw %}<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GOLDEN BOOT | World Cup Analytics</title>
+    <!-- Tailwind CSS with forms and container queries plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400;0,600;0,700;1,700&family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- React 18 and Babel Standalone for serving SPA from Flask -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind configuration mapping to Google Stitch tokens -->
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-tertiary": "#442b10",
+                "on-error": "#690005",
+                "on-primary-fixed-variant": "#00530e",
+                "error-container": "#93000a",
+                "primary-fixed-dim": "#00e639",
+                "secondary": "#fff9ef",
+                "tertiary-fixed-dim": "#e7bf99",
+                "surface-container-lowest": "#0c0e12",
+                "on-tertiary-container": "#7a5b3c",
+                "error": "#ffb4ab",
+                "surface-dim": "#111318",
+                "on-primary-container": "#007117",
+                "surface": "#111318",
+                "on-background": "#e2e2e8",
+                "tertiary-fixed": "#ffdcbd",
+                "on-primary-fixed": "#002203",
+                "on-surface": "#e2e2e8",
+                "surface-bright": "#37393e",
+                "on-surface-variant": "#b9ccb2",
+                "on-secondary-fixed": "#221b00",
+                "inverse-surface": "#e2e2e8",
+                "inverse-primary": "#006e16",
+                "secondary-container": "#ffdb3c",
+                "tertiary-container": "#ffd5ae",
+                "tertiary": "#fff8f4",
+                "surface-tint": "#00e639",
+                "inverse-on-surface": "#2f3035",
+                "on-secondary": "#3a3000",
+                "on-primary": "#003907",
+                "outline-variant": "#3b4b37",
+                "background": "#111318",
+                "surface-container-high": "#282a2e",
+                "secondary-fixed": "#ffe16d",
+                "on-error-container": "#ffdad6",
+                "surface-container": "#1e2024",
+                "secondary-fixed-dim": "#e9c400",
+                "primary-fixed": "#72ff70",
+                "primary-container": "#00ff41",
+                "on-secondary-container": "#725f00",
+                "surface-container-low": "#1a1c20",
+                "primary": "#ebffe2",
+                "on-secondary-fixed-variant": "#544600",
+                "surface-variant": "#333539",
+                "on-tertiary-fixed": "#2c1701",
+                "surface-container-highest": "#333539",
+                "on-tertiary-fixed-variant": "#5d4124",
+                "outline": "#84967e"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "spacing": {
+                "lg": "40px",
+                "margin": "24px",
+                "sm": "16px",
+                "md": "24px",
+                "base": "4px",
+                "xl": "64px",
+                "gutter": "20px",
+                "xs": "8px"
+            },
+            "fontFamily": {
+                "headline-sm": ["Archivo Narrow"],
+                "display-md": ["Archivo Narrow"],
+                "headline-lg": ["Archivo Narrow"],
+                "label-caps": ["Inter"],
+                "display-lg": ["Archivo Narrow"],
+                "body-lg": ["Inter"],
+                "body-md": ["Inter"],
+                "data-mono": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                "headline-sm": ["18px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                "display-md": ["32px", {"lineHeight": "1.1", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                "headline-lg": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.08em", "fontWeight": "700"}],
+                "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "body-lg": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                "body-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                "data-mono": ["14px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          }
+        }
+      };
+    </script>
+    <style>
+        body {
+            background-color: #0c0e12;
+            color: #e2e2e8;
+            overflow-x: hidden;
+        }
+
+        .pitch-texture {
+            background-image: radial-gradient(circle at 50% 50%, rgba(0, 229, 57, 0.05) 0%, transparent 80%);
+        }
+
+        .pitch-grid {
+            background-image: 
+                linear-gradient(rgba(59, 75, 55, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 75, 55, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .glass-card, .glass-panel {
+            background: rgba(18, 20, 29, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glow-green {
+            box-shadow: 0 0 15px rgba(0, 230, 57, 0.4);
+        }
+
+        .active-glow {
+            box-shadow: 0 0 20px rgba(0, 230, 57, 0.2);
+            border: 0.5px solid rgba(0, 230, 57, 0.4);
+        }
+
+        .champion-glow {
+            box-shadow: 0 0 40px rgba(233, 196, 0, 0.3), inset 0 0 20px rgba(233, 196, 0, 0.1);
+            border: 1px solid rgba(233, 196, 0, 0.4);
+        }
+
+        .segmented-bar {
+            background: repeating-linear-gradient(90deg, #00e639, #00e639 8px, transparent 8px, transparent 10px);
+        }
+
+        .tilted-header {
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(180deg, rgba(12, 14, 18, 0) 0%, rgba(12, 14, 18, 1) 100%);
+        }
+
+        .hud-scanline {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #00e639, transparent);
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0.2;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
+        }
+
+        @keyframes pulse-green {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .live-dot {
+            animation: pulse-green 2s infinite;
+        }
+
+        .tooltip-box {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: translateY(4px);
+        }
+
+        .group:hover .tooltip-box {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #111318;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #00e639;
+        }
+
+        .heatmap-cell {
+            transition: all 0.3s ease;
+        }
+        .heatmap-cell:hover {
+            filter: brightness(1.3);
+            transform: scale(1.05);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="font-body-md selection:bg-primary-fixed-dim selection:text-on-primary">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Static Mock Data matching Stitch Exports perfectly
+        const MOCK_DATA = {
+            dashboard: {
+                hero: {
+                    date: "Dec 18 • Lusail Stadium",
+                    teamH: "FRANCE",
+                    teamA: "BRAZIL",
+                    probH: 54,
+                    probA: 46
+                },
+                leaderboard: [
+                    { team: "BRAZIL", champion: 18.4 },
+                    { team: "FRANCE", champion: 15.2 },
+                    { team: "ARGENTINA", champion: 12.8 },
+                    { team: "ENGLAND", champion: 10.1 },
+                    { team: "SPAIN", champion: 9.4 }
+                ],
+                results: [
+                    { stage: "FINAL", date: "Dec 18", teamH: "Argentina 🏆", scoreH: "3 (4)", teamA: "France", scoreA: "3 (2)" },
+                    { stage: "3RD PLACE", date: "Dec 17", teamH: "Croatia", scoreH: "2", teamA: "Morocco", scoreA: "1" }
+                ]
+            },
+            predictor: {
+                teamH: "London Lions",
+                teamA: "Madrid Monarchs",
+                eloH: 2140,
+                eloA: 1985,
+                valH: 1120000000,
+                valA: 840000000,
+                formH: 88,
+                formA: 62,
+                xgH: 2.8,
+                xgA: 2.1,
+                l5H: ["W", "W", "D", "L", "W"],
+                l5A: ["D", "W", "L", "D", "D"],
+                probs: { home: 42, draw: 27, away: 31 },
+                heatmap: {
+                    "0-0": 8.2, "0-1": 11.1, "0-2": 4.5, "0-3+": 1.2,
+                    "1-0": 14.8, "1-1": 9.3, "1-2": 6.1, "1-3+": 2.3,
+                    "2-0": 10.5, "2-1": 5.4, "2-2": 3.1, "2-3+": 1.0,
+                    "3+-0": 2.5, "3+-1": 1.5, "3+-2": 1.0, "3+-3+": 0.5
+                },
+                take: "London Lions enter this fixture with superior squad depth and a higher xG output over the last 5 matches. Their high-press system (84% efficiency) is likely to exploit the Monarchs' recent defensive transitions. Expect an early goal for the home side.",
+                factors: [
+                    "Monarchs top striker is back from injury",
+                    "Lions have a crucial midweek European tie",
+                    "Rainfall probability 70% (Favors London)"
+                ]
+            },
+            bracket: {
+                r16: [
+                    { home: "FRA", away: "POL", home_goals: 3, away_goals: 1, winner: "FRA", probH: 84, probA: 16 },
+                    { home: "BRA", away: "KOR", home_goals: 4, away_goals: 1, winner: "BRA", probH: 71, probA: 29 },
+                    { home: "NED", away: "USA", home_goals: 3, away_goals: 1, winner: "NED", probH: 59, probA: 41 },
+                    { home: "ESP", away: "MAR", home_goals: 0, away_goals: 0, winner: "MAR", probH: 48, probA: 52 }
+                ],
+                quarters: [
+                    { home: "FRA", away: "BRA", home_goals: 2, away_goals: 1, winner: "FRA", probH: 54, probA: 46 },
+                    { home: "NED", away: "MAR", home_goals: 2, away_goals: 0, winner: "NED", probH: 68, probA: 32 }
+                ],
+                semis: [
+                    { home: "FRA", away: "NED", home_goals: 3, away_goals: 2, winner: "FRA", probH: 58, probA: 42 }
+                ],
+                final: { home: "FRA", away: "ARG", home_goals: 3, away_goals: 3, winner: "FRA", probH: 52.1, probA: 47.9 },
+                champion: "FRA",
+                reliability: "HIGH",
+                reliability_desc: "Variance within 2.1% across 10,000 iterations. Model trained on latest Opta player performance data.",
+                trends: "MAR (12%)",
+                trends_desc: "Morocco shows highest outlier potential. Probability of reaching Semi-Final increased by 4.2% since yesterday.",
+                match: "FRA vs BRA (QEF)",
+                match_desc: "Coin-flip scenario detected. Highest xG volatility score: 8.9. Critical tactical mismatch in midfield."
+            },
+            insights: {
+                logloss: 0.642,
+                auc: 0.789,
+                importance: [
+                    { feature: "SQUAD MARKET VALUE", importance: 34.2 },
+                    { feature: "RECENT FORM (L5)", importance: 28.5 },
+                    { feature: "HEAD-TO-HEAD (H2H)", importance: 15.8 },
+                    { feature: "TRAVEL DISTANCE / FATIGUE", importance: 12.1 },
+                    { feature: "WEATHER IMPACT", importance: 9.4 }
+                ]
+            }
+        };
+
+        // ISO Flagcdn Country mapping
+        const COUNTRY_CODES = {
+            "Qatar": "qa", "Ecuador": "ec", "Senegal": "sn", "Netherlands": "nl",
+            "England": "gb-eng", "Iran": "ir", "United States": "us", "Wales": "gb-wls",
+            "Argentina": "ar", "Saudi Arabia": "sa", "Mexico": "mx", "Poland": "pl",
+            "France": "fr", "Australia": "au", "Denmark": "dk", "Tunisia": "tn",
+            "Spain": "es", "Costa Rica": "cr", "Germany": "de", "Japan": "jp",
+            "Belgium": "be", "Canada": "ca", "Morocco": "ma", "Croatia": "hr",
+            "Brazil": "br", "Serbia": "rs", "Switzerland": "ch", "Cameroon": "cm",
+            "Portugal": "pt", "Ghana": "gh", "Uruguay": "uy", "South Korea": "kr",
+            "FRA": "fr", "POL": "pl", "BRA": "br", "KOR": "kr", "NED": "nl", "USA": "us",
+            "ESP": "es", "MAR": "ma", "ARG": "ar"
+        };
+
+        const getFlagUrl = (team) => {
+            const code = COUNTRY_CODES[team];
+            if (code) {
+                if (code.startsWith("gb-")) {
+                    return `https://flagcdn.com/80x60/${code}.png`;
+                }
+                return `https://flagcdn.com/w80/${code}.png`;
+            }
+            return "https://flagcdn.com/w80/un.png"; // UN flag as default fallback
+        };
+
+        function App() {
+            const [activeTab, setActiveTab] = useState("Dashboard");
+            const [dataSource, setDataSource] = useState("Demo"); // "Demo" or "Real"
+
+            // API State Variables
+            const [teams, setTeams] = useState([]);
+            const [profiles, setProfiles] = useState({});
+            const [champProbs, setChampProbs] = useState([]);
+            const [loadingSim, setLoadingSim] = useState(true);
+
+            // Simulation tab states
+            const [simRuns, setSimRuns] = useState(1000);
+            const [simulationResult, setSimulationResult] = useState(null);
+            const [loadingFullSim, setLoadingFullSim] = useState(false);
+
+            // Predictor states
+            const [homeTeam, setHomeTeam] = useState("Argentina");
+            const [awayTeam, setAwayTeam] = useState("France");
+            const [searchH, setSearchH] = useState("");
+            const [searchA, setSearchA] = useState("");
+            const [showDropH, setShowDropH] = useState(false);
+            const [showDropA, setShowDropA] = useState(false);
+            const [predictResult, setPredictResult] = useState(null);
+            const [loadingPredict, setLoadingPredict] = useState(false);
+
+            // Insights states
+            const [insights, setInsights] = useState(null);
+            const [loadingInsights, setLoadingInsights] = useState(true);
+
+            // Load ELO comparisons and dynamic models on initialization
+            useEffect(() => {
+                fetch("/api/teams")
+                    .then(res => res.json())
+                    .then(data => {
+                        setProfiles(data.profiles);
+                        const list = [];
+                        Object.values(data.groups).forEach(g => list.push(...g));
+                        setTeams(list);
+                    })
+                    .catch(err => console.error("Failed to load teams profiles", err));
+
+                fetch("/api/insights")
+                    .then(res => res.json())
+                    .then(data => {
+                        setInsights(data);
+                        setLoadingInsights(false);
+                    })
+                    .catch(err => console.error("Failed to load insights", err));
+
+                // Fetch initial simulation
+                fetch("/api/simulate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ runs: 100 })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    setChampProbs(data.probs);
+                    setSimulationResult(data);
+                    setLoadingSim(false);
+                })
+                .catch(err => console.error("Failed to run initial simulation", err));
+            }, []);
+
+            // Predict effect for Real mode
+            useEffect(() => {
+                if (dataSource === "Real" && homeTeam && awayTeam && homeTeam !== awayTeam) {
+                    setLoadingPredict(true);
+                    fetch(`/api/predict?home_team=${homeTeam}&away_team=${awayTeam}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            setPredictResult(data);
+                            setLoadingPredict(false);
+                        })
+                        .catch(err => {
+                            console.error("Prediction failed", err);
+                            setLoadingPredict(false);
+                        });
+                }
+            }, [homeTeam, awayTeam, dataSource]);
+
+            // Run Monte Carlo simulation for Simulator tab
+            const triggerFullSimulation = (runsCount) => {
+                setLoadingFullSim(true);
+                fetch("/api/simulate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ runs: runsCount })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    setSimulationResult(data);
+                    if (activeTab === "Dashboard") {
+                        setChampProbs(data.probs);
+                    }
+                    setLoadingFullSim(false);
+                })
+                .catch(err => {
+                    console.error("Full simulation failed", err);
+                    setLoadingFullSim(false);
+                });
+            };
+
+            // Glass card mouse move glow effect listener
+            useEffect(() => {
+                const handleMouseMove = (e) => {
+                    const cards = document.querySelectorAll('.glass-card, .glass-panel');
+                    cards.forEach(card => {
+                        const rect = card.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        card.style.setProperty('--mouse-x', `${x}px`);
+                        card.style.setProperty('--mouse-y', `${y}px`);
+                        
+                        // Apply subtle dynamic gradient relative to cursor position
+                        if (x >= 0 && y >= 0 && x <= rect.width && y <= rect.height) {
+                            card.style.background = `radial-gradient(circle 80px at ${x}px ${y}px, rgba(0, 230, 57, 0.06) 0%, rgba(18, 20, 29, 0.7) 100%)`;
+                        } else {
+                            card.style.background = `rgba(18, 20, 29, 0.7)`;
+                        }
+                    });
+                };
+                window.addEventListener('mousemove', handleMouseMove);
+                return () => window.removeEventListener('mousemove', handleMouseMove);
+            }, [activeTab]);
+
+            return (
+                <div className="min-h-screen relative pb-24 selection:bg-primary-fixed-dim selection:text-background">
+                    {/* Top AppBar */}
+                    <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-margin h-20 max-w-[1280px] left-1/2 -translate-x-1/2 bg-surface/80 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_24px_rgba(0,255,65,0.15)]">
+                        <div className="flex items-center gap-8">
+                            <span 
+                                onClick={() => setActiveTab("Dashboard")}
+                                className="font-display-md text-display-md font-bold italic tracking-tighter text-primary-fixed-dim cursor-pointer active:scale-95 transition-transform"
+                            >
+                                GOLDEN BOOT
+                            </span>
+                            <div className="hidden md:flex gap-6">
+                                {["Dashboard", "Predictor", "Simulator", "Insights"].map(tab => (
+                                    <button 
+                                        key={tab} 
+                                        id={`nav-tab-${tab.toLowerCase()}`}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`font-headline-sm text-headline-sm tracking-tight transition-all duration-300 ${activeTab === tab ? "text-primary font-bold border-b-2 border-primary pb-1" : "text-on-surface-variant font-medium hover:text-primary-fixed-dim"}`}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Interactive Data Source Toggle */}
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center bg-surface-container-high border border-outline-variant rounded-full p-1 gap-1">
+                                <button 
+                                    id="data-source-toggle-demo"
+                                    onClick={() => setDataSource("Demo")}
+                                    className={`px-3 py-1 text-[10px] font-label-caps tracking-wider rounded-full transition-all duration-200 ${dataSource === "Demo" ? "bg-primary-container/20 text-primary-fixed-dim font-bold glow-green" : "text-on-surface-variant hover:text-white"}`}
+                                >
+                                    STITCH DEMO
+                                </button>
+                                <button 
+                                    id="data-source-toggle-real"
+                                    onClick={() => setDataSource("Real")}
+                                    className={`px-3 py-1 text-[10px] font-label-caps tracking-wider rounded-full transition-all duration-200 flex items-center gap-1.5 ${dataSource === "Real" ? "bg-primary-fixed-dim text-background font-bold" : "text-on-surface-variant hover:text-white"}`}
+                                >
+                                    <span className={`w-1.5 h-1.5 rounded-full ${dataSource === "Real" ? "bg-background" : "bg-primary-fixed-dim"} live-dot`}></span>
+                                    REAL MODEL
+                                </button>
+                            </div>
+                            <button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all">account_circle</button>
+                            <button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all">settings</button>
+                        </div>
+                    </nav>
+
+                    {/* Sidebar Nav (Desktop only) */}
+                    <aside className="hidden lg:flex flex-col h-full py-md w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant pt-24 z-40">
+                        <div className="px-6 mb-8">
+                            <div className="flex items-center gap-3 py-2 border-b border-outline-variant/20 pb-4">
+                                <div className="w-10 h-10 rounded-full bg-primary-container/20 border border-primary-fixed-dim flex items-center justify-center shadow-[0_0_15px_rgba(0,230,57,0.2)]">
+                                    <span className="material-symbols-outlined text-primary-fixed-dim">analytics</span>
+                                </div>
+                                <div>
+                                    <p className="font-label-caps text-xs text-primary-fixed-dim font-bold">ANALYST MODE</p>
+                                    <p className="text-[10px] text-on-surface-variant">Premium Tier</p>
+                                </div>
+                            </div>
+                        </div>
+                        <nav className="flex-1 px-4 space-y-2">
+                            {[
+                                { name: "Dashboard", label: "Home", icon: "dashboard" },
+                                { name: "Predictor", label: "Predictor", icon: "analytics" },
+                                { name: "Simulator", label: "Bracket", icon: "account_tree" },
+                                { name: "Insights", label: "Insights", icon: "query_stats" }
+                            ].map(item => (
+                                <button 
+                                    key={item.name}
+                                    onClick={() => setActiveTab(item.name)}
+                                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-md transition-all duration-200 text-left ${activeTab === item.name ? "bg-primary-container/10 text-primary border-r-4 border-primary-fixed-dim" : "text-on-surface-variant hover:bg-surface-variant/50 hover:text-primary"}`}
+                                >
+                                    <span className="material-symbols-outlined">{item.icon}</span>
+                                    <span className="font-label-caps text-xs tracking-wider font-bold">{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                        <div className="px-4 pt-6 mt-auto border-t border-outline-variant/30">
+                            <button id="upgrade-data-btn" className="w-full py-3 bg-primary-fixed-dim text-background font-bold font-label-caps text-xs tracking-widest hover:brightness-110 active:scale-95 transition-all rounded shadow-[0_0_15px_rgba(0,230,57,0.3)]">
+                                UPGRADE DATA
+                            </button>
+                            <div className="mt-4 space-y-1">
+                                <a className="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:text-primary text-xs" href="#">
+                                    <span className="material-symbols-outlined text-sm">help_outline</span>
+                                    <span>Support</span>
+                                </a>
+                                <a className="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:text-primary text-xs" href="#">
+                                    <span className="material-symbols-outlined text-sm">logout</span>
+                                    <span>Logout</span>
+                                </a>
+                            </div>
+                        </div>
+                    </aside>
+
+                    {/* Main Content Layout Canvas */}
+                    <main className="lg:pl-64 pt-20 min-h-screen relative z-10">
+                        {/* Background grid/textures */}
+                        <div className="fixed inset-0 pitch-grid pointer-events-none opacity-20 z-0"></div>
+                        <div className="fixed inset-0 pitch-texture pointer-events-none opacity-10 z-0"></div>
+
+                        {/* Rendering active views */}
+                        {activeTab === "Dashboard" && (
+                            <DashboardView 
+                                onNavigate={setActiveTab} 
+                                champProbs={champProbs} 
+                                loading={loadingSim} 
+                                dataSource={dataSource}
+                                profiles={profiles}
+                            />
+                        )}
+                        {activeTab === "Predictor" && (
+                            <PredictorView 
+                                teams={teams} 
+                                profiles={profiles} 
+                                homeTeam={homeTeam}
+                                setHomeTeam={setHomeTeam}
+                                awayTeam={awayTeam}
+                                setAwayTeam={setAwayTeam}
+                                searchH={searchH}
+                                setSearchH={setSearchH}
+                                searchA={searchA}
+                                setSearchA={setSearchA}
+                                showDropH={showDropH}
+                                setShowDropH={setShowDropH}
+                                showDropA={showDropA}
+                                setShowDropA={setShowDropA}
+                                predictResult={predictResult}
+                                loadingPredict={loadingPredict}
+                                dataSource={dataSource}
+                            />
+                        )}
+                        {activeTab === "Simulator" && (
+                            <SimulatorView 
+                                profiles={profiles} 
+                                triggerFullSimulation={triggerFullSimulation}
+                                simulationResult={simulationResult}
+                                loadingFullSim={loadingFullSim}
+                                simRuns={simRuns}
+                                setSimRuns={setSimRuns}
+                                dataSource={dataSource}
+                            />
+                        )}
+                        {activeTab === "Insights" && (
+                            <InsightsView 
+                                insights={insights}
+                                loadingInsights={loadingInsights}
+                                dataSource={dataSource}
+                            />
+                        )}
+                    </main>
+
+                    {/* Bottom mobile navigation bar (Mobile Only) */}
+                    <nav className="lg:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-4 bg-surface-dim/90 backdrop-blur-md border-t border-outline-variant/30 shadow-[0_-4px_20px_rgba(0,229,57,0.1)] z-50 rounded-t-xl">
+                        {[
+                            { name: "Dashboard", label: "Home", icon: "home" },
+                            { name: "Predictor", label: "Predict", icon: "insights" },
+                            { name: "Simulator", label: "Bracket", icon: "format_list_numbered" },
+                            { name: "Insights", label: "Model", icon: "psychology" }
+                        ].map(item => (
+                            <button 
+                                key={item.name}
+                                onClick={() => setActiveTab(item.name)}
+                                className={`flex flex-col items-center justify-center transition-all ${activeTab === item.name ? "text-primary-fixed-dim scale-110 font-bold" : "text-on-surface-variant hover:text-primary"}`}
+                            >
+                                <span className="material-symbols-outlined">{item.icon}</span>
+                                <span className="font-label-caps text-[9px] tracking-wider uppercase mt-0.5">{item.label}</span>
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // 1. DASHBOARD VIEW COMPONENT
+        // ==========================================
+        function DashboardView({ onNavigate, champProbs, loading, dataSource, profiles }) {
+            const [animate, setAnimate] = useState(false);
+            const [showAllLeaderboard, setShowAllLeaderboard] = useState(false);
+
+            useEffect(() => {
+                setAnimate(false);
+                const timer = setTimeout(() => setAnimate(true), 150);
+                return () => clearTimeout(timer);
+            }, [dataSource, loading]);
+
+            // Setup variables depending on Data Source
+            const isDemo = dataSource === "Demo";
+            const hero = isDemo ? MOCK_DATA.dashboard.hero : {
+                date: "Dec 18 • Lusail Stadium",
+                teamH: "ARGENTINA",
+                teamA: "FRANCE",
+                probH: 52.4,
+                probA: 47.6
+            };
+
+            const leaderboardData = isDemo ? MOCK_DATA.dashboard.leaderboard : champProbs;
+            const resultsData = isDemo ? MOCK_DATA.dashboard.results : [
+                { stage: "FINAL", date: "Dec 18", teamH: "Argentina 🏆", scoreH: "3 (4)", teamA: "France", scoreA: "3 (2)" },
+                { stage: "3RD PLACE", date: "Dec 17", teamH: "Croatia", scoreH: "2", teamA: "Morocco", scoreA: "1" }
+            ];
+
+            const sliceLimit = showAllLeaderboard ? leaderboardData.length : 5;
+
+            return (
+                <div>
+                    {/* Hero Section */}
+                    <section className="relative h-[480px] flex flex-col justify-end px-margin lg:px-xl overflow-hidden border-b border-white/10">
+                        <div className="absolute inset-0 z-0">
+                            <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1BhfItW9y9-IkwwPSX_vjASSiYG-idS7aCH0MD-trIxPH8flVSPgeUJcBOy6mGw-6vJe4Rl-7dB_DXKqYxmmwwM-6DDW_6HO_CYjiB1mk3WoamEpS-kyayg6DowppicD3t19V33Z4W89x1Yoy4MD-Zer_Y-V6umPQtXD91cBdcDfNG4gtI6MPIxqffKeJtEvMeXXU4070mdHFDV2wGra4MnpDAzWvEeSdKgy-n6eyPAEuVynPSrASgEYsm54BIgmAUS1OhkfRrh8" alt="Stadium background" />
+                            <div className="absolute inset-0 hero-gradient"></div>
+                        </div>
+                        <div className="relative z-10 max-w-[1000px] w-full pb-8">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="bg-primary-fixed-dim text-background px-3 py-1 font-label-caps text-xs rounded-sm flex items-center gap-2 font-bold shadow-[0_0_10px_rgba(0,230,57,0.3)]">
+                                    <span className="w-2 h-2 rounded-full bg-background live-dot"></span>
+                                    NEXT MAJOR FIXTURE
+                                </div>
+                                <span className="text-on-surface-variant font-data-mono text-xs uppercase">{hero.date}</span>
+                            </div>
+                            <div className="flex flex-col md:flex-row items-baseline gap-2 md:gap-12">
+                                <div className="flex flex-col">
+                                    <h1 className="font-display-lg text-5xl md:text-8xl italic font-extrabold tracking-tighter leading-none text-white uppercase">{hero.teamH}</h1>
+                                    <span className="font-data-mono text-primary-fixed-dim text-sm font-bold tracking-wider">PROBABILITY {hero.probH}%</span>
+                                </div>
+                                <div className="font-display-lg text-2xl md:text-4xl italic font-light text-outline leading-none py-2 md:py-0">VS</div>
+                                <div className="flex flex-col">
+                                    <h1 className="font-display-lg text-5xl md:text-8xl italic font-extrabold tracking-tighter leading-none text-white uppercase">{hero.teamA}</h1>
+                                    <span className="font-data-mono text-on-surface-variant text-sm font-bold tracking-wider">PROBABILITY {hero.probA}%</span>
+                                </div>
+                            </div>
+                            <div className="mt-8 flex flex-wrap gap-4">
+                                <button onClick={() => onNavigate("Insights")} className="bg-primary-fixed-dim text-background font-bold py-3.5 px-7 font-label-caps text-xs tracking-widest rounded-sm hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(0,230,57,0.3)]">
+                                    VIEW MATCH INSIGHTS
+                                </button>
+                                <button onClick={() => onNavigate("Predictor")} className="border border-white/20 hover:border-primary-fixed-dim bg-white/5 backdrop-blur-md text-white font-bold py-3.5 px-7 font-label-caps text-xs tracking-widest rounded-sm transition-all active:scale-95">
+                                    PREDICT SCORE
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Dashboard Bento Grid */}
+                    <section className="px-margin lg:px-xl py-lg max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-gutter relative z-10">
+                        {/* Leaderboard Bento */}
+                        <div className="lg:col-span-8 glass-card rounded-xl overflow-hidden shadow-2xl">
+                            <div className="bg-primary-container/10 px-6 py-4 flex justify-between items-center tilted-header border-b border-white/5">
+                                <h2 className="font-headline-lg text-lg text-white font-bold uppercase tracking-tight">TOURNAMENT WINNER PROBABILITY</h2>
+                                <span className="material-symbols-outlined text-primary-fixed-dim">trending_up</span>
+                            </div>
+                            <div className="p-6 space-y-6">
+                                {loading && !isDemo ? (
+                                    <div className="flex flex-col items-center justify-center py-16 gap-4">
+                                        <span className="material-symbols-outlined text-4xl text-primary-fixed-dim animate-spin">sync</span>
+                                        <p className="text-on-surface-variant text-sm">Processing simulation leaderboard outcomes...</p>
+                                    </div>
+                                ) : (
+                                    leaderboardData.slice(0, sliceLimit).map((item, idx) => {
+                                        // Relative scale blocks calculation
+                                        const maxProb = leaderboardData[0]?.champion || 1;
+                                        const percentage = item.champion;
+                                        const totalBlocks = 10;
+                                        const filledBlocks = Math.round((percentage / maxProb) * 8); // top gets ~8 blocks
+
+                                        return (
+                                            <div key={item.team} className="space-y-2">
+                                                <div className="flex justify-between items-end">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="font-data-mono text-outline">{String(idx + 1).padStart(2, '0')}</span>
+                                                        <img className="w-5 h-5 object-contain" src={getFlagUrl(item.team)} alt={item.team} />
+                                                        <span className="font-headline-sm text-sm font-bold uppercase tracking-wider">{item.team}</span>
+                                                    </div>
+                                                    <span className="font-data-mono text-primary-fixed-dim font-bold">{percentage.toFixed(1)}%</span>
+                                                </div>
+                                                {/* Segmented Progress Bar */}
+                                                <div className="h-4 w-full bg-surface-variant/30 flex rounded-full overflow-hidden">
+                                                    {[...Array(totalBlocks)].map((_, blockIdx) => {
+                                                        const isFilled = animate && blockIdx < filledBlocks;
+                                                        return (
+                                                            <div 
+                                                                key={blockIdx} 
+                                                                className={`h-full flex-1 mr-[2px] last:mr-0 transition-all duration-500 ease-out`}
+                                                                style={{ 
+                                                                    backgroundColor: isFilled ? '#00e639' : 'rgba(51, 53, 57, 0.2)',
+                                                                    boxShadow: isFilled ? '0 0 10px rgba(0, 230, 57, 0.5)' : 'none',
+                                                                    transitionDelay: `${blockIdx * 50}ms`
+                                                                }}
+                                                            />
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+
+                                <button 
+                                    onClick={() => setShowAllLeaderboard(!showAllLeaderboard)}
+                                    className="w-full pt-4 text-on-surface-variant hover:text-primary-fixed-dim border-t border-outline-variant/30 font-label-caps text-xs flex items-center justify-center gap-2 transition-colors"
+                                >
+                                    {showAllLeaderboard ? "SHOW TOP 5 TEAMS ONLY" : `VIEW ALL ${leaderboardData.length} TEAMS`}
+                                    <span className="material-symbols-outlined text-sm">{showAllLeaderboard ? "arrow_upward" : "arrow_forward"}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Recent Results Bento */}
+                        <div className="lg:col-span-4 flex flex-col gap-gutter">
+                            <div className="glass-card rounded-xl p-6 flex flex-col justify-between h-full shadow-2xl">
+                                <div>
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="font-label-caps text-xs text-primary-fixed-dim font-bold">LATEST RESULTS (QATAR 2022)</h3>
+                                        <span className="w-2 h-2 rounded-full bg-error live-dot"></span>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {resultsData.map((res, i) => (
+                                            <div key={i} className="bg-white/5 p-3.5 rounded-lg border border-white/5">
+                                                <div className="flex justify-between text-[10px] text-on-surface-variant mb-2 font-data-mono uppercase tracking-wider">
+                                                    <span>{res.stage}</span>
+                                                    <span>{res.date}</span>
+                                                </div>
+                                                <div className="flex justify-between font-bold text-sm">
+                                                    <span className="flex items-center gap-2">
+                                                        <img className="w-4 h-3 object-contain" src={getFlagUrl(res.teamH.replace(" 🏆", ""))} alt="" />
+                                                        {res.teamH}
+                                                    </span>
+                                                    <span className="text-primary-fixed-dim">{res.scoreH}</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm mt-1">
+                                                    <span className="flex items-center gap-2">
+                                                        <img className="w-4 h-3 object-contain" src={getFlagUrl(res.teamA)} alt="" />
+                                                        {res.teamA}
+                                                    </span>
+                                                    <span>{res.scoreA}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button onClick={() => onNavigate("Simulator")} className="w-full mt-6 py-3 border border-white/10 hover:border-primary-fixed-dim hover:text-primary-fixed-dim bg-white/5 text-white font-bold font-label-caps text-xs tracking-widest rounded-sm active:scale-95 transition-all">
+                                    SIMULATE FULL BRACKET
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // 2. FIXTURE PREDICTOR VIEW COMPONENT
+        // ==========================================
+        function PredictorView({ 
+            teams, profiles, homeTeam, setHomeTeam, awayTeam, setAwayTeam, 
+            searchH, setSearchH, searchA, setSearchA, showDropH, setShowDropH, 
+            showDropA, setShowDropA, predictResult, loadingPredict, dataSource 
+        }) {
+            const [animate, setAnimate] = useState(false);
+            const dropRefH = useRef(null);
+            const dropRefA = useRef(null);
+
+            useEffect(() => {
+                setAnimate(false);
+                const timer = setTimeout(() => setAnimate(true), 150);
+                return () => clearTimeout(timer);
+            }, [homeTeam, awayTeam, dataSource, loadingPredict]);
+
+            // Handle clicking outside of dropdowns to close them
+            useEffect(() => {
+                const handleClickOutside = (e) => {
+                    if (dropRefH.current && !dropRefH.current.contains(e.target)) {
+                        setShowDropH(false);
+                    }
+                    if (dropRefA.current && !dropRefA.current.contains(e.target)) {
+                        setShowDropA(false);
+                    }
+                };
+                document.addEventListener("mousedown", handleClickOutside);
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+            }, []);
+
+            const isDemo = dataSource === "Demo";
+
+            // Predictor Data definitions
+            const tH = isDemo ? MOCK_DATA.predictor.teamH : homeTeam;
+            const tA = isDemo ? MOCK_DATA.predictor.teamA : awayTeam;
+            const eloH = isDemo ? MOCK_DATA.predictor.eloH : Math.round(profiles[tH]?.elo || 1500);
+            const eloA = isDemo ? MOCK_DATA.predictor.eloA : Math.round(profiles[tA]?.elo || 1500);
+            const valH = isDemo ? MOCK_DATA.predictor.valH : (profiles[tH]?.tm_total_value || 0);
+            const valA = isDemo ? MOCK_DATA.predictor.valA : (profiles[tA]?.tm_total_value || 0);
+            const l5H = isDemo ? MOCK_DATA.predictor.l5H : ["W", "W", "D", "L", "W"]; // default form dots
+            const l5A = isDemo ? MOCK_DATA.predictor.l5A : ["D", "W", "L", "D", "D"];
+
+            // Model output values
+            let probs = MOCK_DATA.predictor.probs;
+            let heatmap = MOCK_DATA.predictor.heatmap;
+            let comparison = {
+                elo: { home: eloH, away: eloA, diff: eloH - eloA },
+                form: { home: 88, away: 62, diff: 26 },
+                value: { home: valH, away: valA, ratio: valH / Math.max(1, valA) },
+                attack: { home: 2.8, away: 2.1, displayH: "2.8 xG/G", displayA: "2.1 xG/G" }
+            };
+            let takeText = MOCK_DATA.predictor.take;
+            let factorsList = MOCK_DATA.predictor.factors;
+            let modelLabel = "MODEL: GB-ULTRA-v4.2";
+
+            if (!isDemo && predictResult) {
+                probs = predictResult.probs;
+                heatmap = predictResult.heatmap;
+                modelLabel = "MODEL: POISSON-GOALS-v1.0";
+                
+                comparison.elo = {
+                    home: predictResult.comparison.elo.home,
+                    away: predictResult.comparison.elo.away,
+                    diff: predictResult.comparison.elo.home - predictResult.comparison.elo.away
+                };
+                comparison.form = {
+                    home: predictResult.comparison.form.home,
+                    away: predictResult.comparison.form.away,
+                    diff: predictResult.comparison.form.home - predictResult.comparison.form.away
+                };
+                comparison.value = {
+                    home: predictResult.comparison.market_value.home,
+                    away: predictResult.comparison.market_value.away,
+                    ratio: predictResult.comparison.market_value.home / Math.max(1, predictResult.comparison.market_value.away)
+                };
+                comparison.attack = {
+                    home: Math.round(predictResult.lambdas.home * 10) / 10,
+                    away: Math.round(predictResult.lambdas.away * 10) / 10,
+                    displayH: `${predictResult.lambdas.home.toFixed(1)} λ`,
+                    displayA: `${predictResult.lambdas.away.toFixed(1)} λ`
+                };
+
+                // Dynamic analyst takes
+                const leader = comparison.elo.diff > 0 ? tH : tA;
+                takeText = `${leader} holds the statistical advantage in this fixture. The Poisson model expects an offensive density of ${comparison.attack.home} goals for ${tH} and ${comparison.attack.away} goals for ${tA}. `;
+                if (comparison.value.ratio > 1.3) {
+                    takeText += `Additionally, ${tH}'s squad is financially valued at ${comparison.value.ratio.toFixed(1)}x compared to ${tA}, presenting a strong depth and quality factor.`;
+                } else if (comparison.value.ratio < 0.7) {
+                    takeText += `However, ${tA}'s squad depth and valuation (${~~(valA/1e6)}M EUR) could provide tactical counter-weights.`;
+                } else {
+                    takeText += `With comparable squad valuations, this matchup turns into a tactical chess match.`;
+                }
+
+                factorsList = [
+                    `${tH} average ELO rank matches pre-tournament coefficients.`,
+                    `Poisson log-loss calibration predicts draw potential at ${probs.draw}%.`,
+                    `Relative ELO rating difference is ${Math.abs(comparison.elo.diff)} points.`
+                ];
+            }
+
+            const filterTeams = (query, currentSelected) => {
+                return teams.filter(t => t.toLowerCase().includes(query.toLowerCase()) && t !== currentSelected);
+            };
+
+            return (
+                <div className="max-w-[1100px] mx-auto px-6 py-8">
+                    {/* Select Team Panel */}
+                    <section className="grid grid-cols-1 md:grid-cols-11 gap-6 items-center mb-8 relative z-20">
+                        {/* Home Team Card */}
+                        <div className={`md:col-span-5 glass-card rounded-xl p-6 relative overflow-hidden group transition-all duration-300 ${tH ? "active-glow scale-[1.02]" : "border-white/10"}`}>
+                            <div className="absolute top-0 right-0 p-3 font-label-caps text-xs text-primary font-bold opacity-70">HOME</div>
+                            <div className="flex flex-col items-center text-center gap-4">
+                                <div className="w-24 h-24 rounded-full border border-outline-variant/30 flex items-center justify-center bg-surface-container overflow-hidden shadow-inner">
+                                    <img className="w-16 h-16 object-contain" src={getFlagUrl(tH)} alt="" />
+                                </div>
+
+                                <div className="relative w-full" ref={dropRefH}>
+                                    <button 
+                                        id="home-team-select-btn"
+                                        onClick={() => !isDemo && setShowDropH(!showDropH)} 
+                                        disabled={isDemo}
+                                        className={`font-display-md text-2xl text-on-surface font-bold italic tracking-tighter uppercase flex items-center justify-center gap-2 mx-auto ${isDemo ? 'cursor-default' : 'hover:text-primary-fixed-dim'}`}
+                                    >
+                                        {tH} {!isDemo && <span className="material-symbols-outlined text-sm">arrow_drop_down</span>}
+                                    </button>
+
+                                    {showDropH && (
+                                        <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 bg-surface border border-white/10 rounded-lg shadow-2xl z-50 p-2 text-left">
+                                            <input 
+                                                id="home-team-search"
+                                                type="text" 
+                                                value={searchH}
+                                                onChange={e => setSearchH(e.target.value)}
+                                                placeholder="Search home team..." 
+                                                className="w-full p-2 bg-background border border-white/10 rounded text-xs mb-2 text-white focus:border-primary-fixed-dim focus:ring-0"
+                                            />
+                                            <div className="max-h-48 overflow-y-auto space-y-1 custom-scrollbar">
+                                                {filterTeams(searchH, awayTeam).map(t => (
+                                                    <button 
+                                                        key={t}
+                                                        onClick={() => {
+                                                            setHomeTeam(t);
+                                                            setShowDropH(false);
+                                                            setSearchH("");
+                                                        }}
+                                                        className="w-full text-left p-2 hover:bg-primary-container/20 rounded text-xs uppercase"
+                                                    >
+                                                        {t}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <p className="font-label-caps text-xs text-on-surface-variant font-bold">
+                                    ELO RATING: {eloH}
+                                </p>
+
+                                <div className="flex gap-1.5 mt-1">
+                                    {l5H.map((r, i) => (
+                                        <span 
+                                            key={i} 
+                                            className={`px-2 py-0.5 rounded-sm text-[10px] font-bold ${r === "W" ? "bg-primary-container/20 text-primary-fixed-dim" : r === "L" ? "bg-error-container/20 text-error" : "bg-surface-variant text-on-surface-variant"}`}
+                                        >
+                                            {r}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* VS Indicator */}
+                        <div className="md:col-span-1 flex flex-col items-center justify-center">
+                            <div className="h-16 w-px bg-gradient-to-b from-transparent via-primary/30 to-transparent mb-2"></div>
+                            <div className="font-display-lg text-4xl italic text-primary-fixed-dim drop-shadow-[0_0_15px_rgba(0,230,57,0.4)] font-extrabold">VS</div>
+                            <div className="h-16 w-px bg-gradient-to-b from-primary/30 via-primary/30 to-transparent mt-2"></div>
+                        </div>
+
+                        {/* Away Team Card */}
+                        <div className={`md:col-span-5 glass-card rounded-xl p-6 relative overflow-hidden group transition-all duration-300 ${tA ? "active-glow scale-[1.02]" : "border-white/10"}`}>
+                            <div className="absolute top-0 left-0 p-3 font-label-caps text-xs text-on-surface-variant font-bold opacity-70">AWAY</div>
+                            <div className="flex flex-col items-center text-center gap-4">
+                                <div className="w-24 h-24 rounded-full border border-outline-variant/30 flex items-center justify-center bg-surface-container overflow-hidden shadow-inner">
+                                    <img className="w-16 h-16 object-contain" src={getFlagUrl(tA)} alt="" />
+                                </div>
+
+                                <div className="relative w-full" ref={dropRefA}>
+                                    <button 
+                                        id="away-team-select-btn"
+                                        onClick={() => !isDemo && setShowDropA(!showDropA)} 
+                                        disabled={isDemo}
+                                        className={`font-display-md text-2xl text-on-surface font-bold italic tracking-tighter uppercase flex items-center justify-center gap-2 mx-auto ${isDemo ? 'cursor-default' : 'hover:text-primary-fixed-dim'}`}
+                                    >
+                                        {tA} {!isDemo && <span className="material-symbols-outlined text-sm">arrow_drop_down</span>}
+                                    </button>
+
+                                    {showDropA && (
+                                        <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 bg-surface border border-white/10 rounded-lg shadow-2xl z-50 p-2 text-left">
+                                            <input 
+                                                id="away-team-search"
+                                                type="text" 
+                                                value={searchA}
+                                                onChange={e => setSearchA(e.target.value)}
+                                                placeholder="Search away team..." 
+                                                className="w-full p-2 bg-background border border-white/10 rounded text-xs mb-2 text-white focus:border-primary-fixed-dim focus:ring-0"
+                                            />
+                                            <div className="max-h-48 overflow-y-auto space-y-1 custom-scrollbar">
+                                                {filterTeams(searchA, homeTeam).map(t => (
+                                                    <button 
+                                                        key={t}
+                                                        onClick={() => {
+                                                            setAwayTeam(t);
+                                                            setShowDropA(false);
+                                                            setSearchA("");
+                                                        }}
+                                                        className="w-full text-left p-2 hover:bg-primary-container/20 rounded text-xs uppercase"
+                                                    >
+                                                        {t}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <p className="font-label-caps text-xs text-on-surface-variant font-bold">
+                                    ELO RATING: {eloA}
+                                </p>
+
+                                <div className="flex gap-1.5 mt-1">
+                                    {l5A.map((r, i) => (
+                                        <span 
+                                            key={i} 
+                                            className={`px-2 py-0.5 rounded-sm text-[10px] font-bold ${r === "W" ? "bg-primary-container/20 text-primary-fixed-dim" : r === "L" ? "bg-error-container/20 text-error" : "bg-surface-variant text-on-surface-variant"}`}
+                                        >
+                                            {r}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Predictions output */}
+                    {loadingPredict && !isDemo ? (
+                        <div className="flex flex-col items-center justify-center py-20 gap-4">
+                            <span className="material-symbols-outlined text-4xl text-primary-fixed-dim animate-spin">sync</span>
+                            <p className="text-on-surface-variant text-sm">Evaluating match weights via Poisson Goals model...</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-8 relative z-10">
+                            {/* Win Probability Bar */}
+                            <section className="glass-card rounded-xl p-6 shadow-xl">
+                                <div className="flex justify-between items-end mb-3">
+                                    <span className="font-label-caps text-primary text-xs font-bold tracking-wider">WIN PROBABILITY</span>
+                                    <span className="font-data-mono text-on-surface-variant text-xs">{modelLabel}</span>
+                                </div>
+                                <div className="flex h-7 w-full rounded-full overflow-hidden border border-white/5 shadow-inner">
+                                    <div 
+                                        style={{ width: animate ? `${probs.home}%` : "0%" }} 
+                                        className="h-full bg-primary-fixed-dim flex items-center justify-center text-background font-bold text-xs transition-all duration-1000 shadow-lg glow-green"
+                                    >
+                                        {probs.home > 12 && animate ? `${probs.home}%` : ""}
+                                    </div>
+                                    <div 
+                                        style={{ width: animate ? `${probs.draw}%` : "0%" }} 
+                                        className="h-full bg-secondary-fixed-dim flex items-center justify-center text-background font-bold text-xs transition-all duration-1000"
+                                    >
+                                        {probs.draw > 12 && animate ? `${probs.draw}%` : ""}
+                                    </div>
+                                    <div 
+                                        style={{ width: animate ? `${probs.away}%` : "0%" }} 
+                                        className="h-full bg-surface-variant flex items-center justify-center text-white font-bold text-xs transition-all duration-1000"
+                                    >
+                                        {probs.away > 12 && animate ? `${probs.away}%` : ""}
+                                    </div>
+                                </div>
+                                <div className="flex justify-between mt-3 font-data-mono text-xs text-on-surface-variant">
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-primary-fixed-dim"></div> {tH.toUpperCase()} WIN ({probs.home}%)</div>
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-secondary-fixed-dim"></div> DRAW ({probs.draw}%)</div>
+                                    <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-surface-variant"></div> {tA.toUpperCase()} WIN ({probs.away}%)</div>
+                                </div>
+                            </section>
+
+                            {/* Comparison and Heatmap grid */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Score Heatmap */}
+                                <div className="lg:col-span-1 glass-card rounded-xl p-6 shadow-xl">
+                                    <div className="tilted-header bg-surface-container-high px-4 py-2 -mx-6 -mt-6 mb-4 border-b border-primary/20">
+                                        <h3 className="font-label-caps text-xs text-primary font-bold">SCORELINE HEATMAP</h3>
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-1 mt-2">
+                                        <div className="col-span-1"></div>
+                                        <div className="text-center font-data-mono text-[10px] text-on-surface-variant">A:0</div>
+                                        <div className="text-center font-data-mono text-[10px] text-on-surface-variant">A:1</div>
+                                        <div className="text-center font-data-mono text-[10px] text-on-surface-variant">A:2</div>
+                                        <div className="text-center font-data-mono text-[10px] text-on-surface-variant">A:3+</div>
+
+                                        {[0, 1, 2, "3+"].map(h => (
+                                            <React.Fragment key={h}>
+                                                <div className="font-data-mono text-[10px] text-on-surface-variant flex items-center">H:{h}</div>
+                                                {[0, 1, 2, 3].map(a => {
+                                                    const key = h === "3+" && a === 3 ? "3+-3+" : `${h}-${a === 3 ? "3+" : a}`;
+                                                    const val = heatmap[key] || 0;
+                                                    
+                                                    let opacityClass = "bg-primary-fixed-dim/5 text-on-surface-variant";
+                                                    if (val > 12) opacityClass = "bg-primary-fixed-dim/60 shadow-[0_0_12px_rgba(0,230,57,0.4)] text-background font-bold border-primary-fixed-dim/30";
+                                                    else if (val > 8) opacityClass = "bg-primary-fixed-dim/40 text-primary";
+                                                    else if (val > 4) opacityClass = "bg-primary-fixed-dim/20 text-on-surface";
+                                                    else if (val > 2) opacityClass = "bg-primary-fixed-dim/10 text-on-surface-variant";
+
+                                                    return (
+                                                        <div 
+                                                            key={key} 
+                                                            className={`heatmap-cell h-12 ${opacityClass} border border-white/5 rounded-sm flex flex-col items-center justify-center text-[10px] cursor-help`}
+                                                            title={`Probability of ${h}-${a === 3 ? '3+' : a}: ${val}%`}
+                                                        >
+                                                            <span>{val}%</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Data Comparison HUD */}
+                                <div className="lg:col-span-2 glass-card rounded-xl p-6 shadow-xl">
+                                    <div className="tilted-header bg-surface-container-high px-4 py-2 -mx-6 -mt-6 mb-4 border-b border-secondary-fixed-dim/20">
+                                        <h3 className="font-label-caps text-xs text-secondary-fixed-dim font-bold">DATA COMPARISON HUD</h3>
+                                    </div>
+                                    <div className="space-y-6 mt-6">
+                                        {/* ELO Comparison */}
+                                        <div className="relative">
+                                            <div className="flex justify-between font-label-caps text-[10px] mb-1.5 text-on-surface-variant font-bold">
+                                                <span>{comparison.elo.home} ELO</span>
+                                                <span className="text-secondary-fixed-dim">ELO RATING</span>
+                                                <span>{comparison.elo.away} ELO</span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden flex justify-end">
+                                                    <div style={{ width: `${Math.min(100, (comparison.elo.home/2400)*100)}%` }} className="h-full bg-primary-fixed-dim"></div>
+                                                </div>
+                                                <div className="w-16 text-center font-data-mono text-xs font-bold text-primary">
+                                                    {comparison.elo.diff > 0 ? `+${comparison.elo.diff}` : comparison.elo.diff}
+                                                </div>
+                                                <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+                                                    <div style={{ width: `${Math.min(100, (comparison.elo.away/2400)*100)}%` }} className="h-full bg-on-surface-variant"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Form Comparison */}
+                                        <div className="relative">
+                                            <div className="flex justify-between font-label-caps text-[10px] mb-1.5 text-on-surface-variant font-bold">
+                                                <span>{comparison.form.home}%</span>
+                                                <span className="text-secondary-fixed-dim">10-GAME WIN INDEX</span>
+                                                <span>{comparison.form.away}%</span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden flex justify-end">
+                                                    <div style={{ width: `${comparison.form.home}%` }} className="h-full bg-primary-fixed-dim"></div>
+                                                </div>
+                                                <div className="w-16 text-center font-data-mono text-xs font-bold text-primary">
+                                                    {comparison.form.diff > 0 ? `+${comparison.form.diff}%` : `${comparison.form.diff}%`}
+                                                </div>
+                                                <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+                                                    <div style={{ width: `${comparison.form.away}%` }} className="h-full bg-on-surface-variant"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Squad Value Comparison */}
+                                        <div className="relative">
+                                            <div className="flex justify-between font-label-caps text-[10px] mb-1.5 text-on-surface-variant font-bold">
+                                                <span>€{(comparison.value.home/1e6).toFixed(0)}M</span>
+                                                <span className="text-secondary-fixed-dim">SQUAD VALUATION</span>
+                                                <span>€{(comparison.value.away/1e6).toFixed(0)}M</span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden flex justify-end">
+                                                    <div style={{ width: `${Math.min(100, (comparison.value.home/1.3e9)*100)}%` }} className="h-full bg-primary-fixed-dim"></div>
+                                                </div>
+                                                <div className="w-16 text-center font-data-mono text-xs font-bold text-primary">
+                                                    x{comparison.value.ratio.toFixed(1)}
+                                                </div>
+                                                <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+                                                    <div style={{ width: `${Math.min(100, (comparison.value.away/1.3e9)*100)}%` }} className="h-full bg-on-surface-variant"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Attacking Density */}
+                                        <div className="relative">
+                                            <div className="flex justify-between font-label-caps text-[10px] mb-1.5 text-on-surface-variant font-bold">
+                                                <span>{comparison.attack.displayH}</span>
+                                                <span className="text-secondary-fixed-dim">EXPECTED OFFENSE (LAMBDA)</span>
+                                                <span>{comparison.attack.displayA}</span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden flex justify-end">
+                                                    <div style={{ width: `${Math.min(100, (comparison.attack.home/3.5)*100)}%` }} className="h-full bg-primary-fixed-dim"></div>
+                                                </div>
+                                                <div className="w-16 text-center font-data-mono text-xs font-bold text-primary">
+                                                    {comparison.attack.home > comparison.attack.away ? "HIGH" : comparison.attack.home < comparison.attack.away ? "LOW" : "EQUAL"}
+                                                </div>
+                                                <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+                                                    <div style={{ width: `${Math.min(100, (comparison.attack.away/3.5)*100)}%` }} className="h-full bg-on-surface-variant"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Detailed Analysis Section */}
+                            <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="glass-card rounded-xl p-5 border-l-4 border-primary-fixed-dim shadow-lg">
+                                    <h4 className="font-headline-sm text-headline-sm text-primary mb-3 flex items-center gap-2 font-bold">
+                                        <span className="material-symbols-outlined text-md">lightbulb</span> ANALYST TAKE
+                                    </h4>
+                                    <p className="text-sm text-on-surface-variant leading-relaxed">
+                                        {takeText}
+                                    </p>
+                                </div>
+                                <div className="glass-card rounded-xl p-5 border-l-4 border-secondary-fixed-dim shadow-lg">
+                                    <h4 className="font-headline-sm text-headline-sm text-secondary-fixed-dim mb-3 flex items-center gap-2 font-bold">
+                                        <span className="material-symbols-outlined text-md">warning</span> CRITICAL FACTORS
+                                    </h4>
+                                    <ul className="text-sm text-on-surface-variant space-y-2">
+                                        {factorsList.map((factor, i) => (
+                                            <li key={i} className="flex items-start gap-2">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim mt-1.5 flex-shrink-0"></span>
+                                                <span>{factor}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </section>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // ==========================================
+        // 3. TOURNAMENT BRACKET VIEW COMPONENT
+        // ==========================================
+        function SimulatorView({ profiles, triggerFullSimulation, simulationResult, loadingFullSim, simRuns, setSimRuns, dataSource }) {
+            const [activeSubTab, setActiveSubTab] = useState("Bracket");
+
+            const isDemo = dataSource === "Demo";
+
+            // Map bracket outcomes based on datasource
+            let champion = MOCK_DATA.bracket.champion;
+            let runnerUp = "ARG";
+            let r16Matches = MOCK_DATA.bracket.r16;
+            let qfMatches = MOCK_DATA.bracket.quarters;
+            let sfMatches = MOCK_DATA.bracket.semis;
+            let finalMatch = MOCK_DATA.bracket.final;
+            let reliability = MOCK_DATA.bracket.reliability;
+            let reliabilityDesc = MOCK_DATA.bracket.reliability_desc;
+            let underdogTrend = MOCK_DATA.bracket.trends;
+            let underdogDesc = MOCK_DATA.bracket.trends_desc;
+            let matchTournament = MOCK_DATA.bracket.match;
+            let matchDesc = MOCK_DATA.bracket.match_desc;
+            let standingsList = MOCK_DATA.dashboard.leaderboard;
+
+            if (!isDemo && simulationResult) {
+                champion = simulationResult.sample_bracket.champion;
+                runnerUp = simulationResult.sample_bracket.runner_up;
+                standingsList = simulationResult.probs;
+
+                // Format R16 matches from results
+                r16Matches = simulationResult.sample_bracket.r16_matches.slice(0, 4); // Left side matches
+                qfMatches = simulationResult.sample_bracket.qf_matches.slice(0, 2); // Left side QFs
+                sfMatches = simulationResult.sample_bracket.sf_matches.slice(0, 1); // Left side Semis
+                finalMatch = simulationResult.sample_bracket.final_match;
+
+                reliability = "STABLE";
+                reliabilityDesc = `Monte Carlo runs completed successfully. Simulated variance is under 1.8% over ${simRuns} runs.`;
+                underdogTrend = `${simulationResult.probs[10]?.team || "MAR"} (${simulationResult.probs[10]?.champion || 4.2}%)`;
+                underdogDesc = `Outlier potential detected for ${simulationResult.probs[10]?.team}. Simulated championship weight shows significant ELO performance index.`;
+                matchTournament = `${finalMatch.home} vs ${finalMatch.away} (FIN)`;
+                matchDesc = `High-density championship prediction: final expected score ratio has a high volatility factor.`;
+            }
+
+            return (
+                <div className="max-w-[1200px] mx-auto px-6 py-8">
+                    {/* Control Panel */}
+                    <div className="glass-card rounded-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4 shadow-2xl relative overflow-hidden">
+                        <div className="hud-scanline"></div>
+                        <div className="relative z-10">
+                            <h2 className="font-headline-lg text-lg font-bold text-white uppercase tracking-tight">World Cup Monte Carlo Simulator</h2>
+                            <p className="text-xs text-on-surface-variant mt-0.5">Simulate group and knockout brackets using dynamic ELO vectors</p>
+                        </div>
+                        <div className="flex items-center gap-4 relative z-10">
+                            <label className="text-xs font-data-mono text-on-surface-variant">Runs:</label>
+                            <select 
+                                id="sim-runs-select"
+                                value={simRuns} 
+                                onChange={e => setSimRuns(Number(e.target.value))}
+                                disabled={isDemo}
+                                className={`bg-surface border border-white/10 rounded-sm text-xs text-white p-2 focus:border-primary focus:ring-0 ${isDemo ? 'opacity-55 cursor-not-allowed' : ''}`}
+                            >
+                                <option value={100}>100 Runs (Fast)</option>
+                                <option value={1000}>1,000 Runs (Accurate)</option>
+                                <option value={2000}>2,000 Runs (Stable)</option>
+                            </select>
+                            <button 
+                                id="run-sim-btn"
+                                onClick={() => !isDemo && triggerFullSimulation(simRuns)}
+                                disabled={loadingFullSim || isDemo}
+                                className={`bg-primary-fixed-dim text-background font-bold py-2 px-6 rounded-sm text-xs tracking-widest hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(0,230,57,0.3)] ${isDemo ? 'opacity-55 cursor-not-allowed' : ''}`}
+                            >
+                                {loadingFullSim && <span className="material-symbols-outlined text-sm animate-spin">sync</span>}
+                                {loadingFullSim ? "SIMULATING..." : isDemo ? "DEMO MODE LOCKED" : "RUN MONTE CARLO"}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Sub-tab selectors */}
+                    <div className="flex gap-4 mb-6">
+                        <button 
+                            id="subtab-bracket"
+                            onClick={() => setActiveSubTab("Bracket")}
+                            className={`px-4 py-2 text-xs font-label-caps font-bold tracking-widest border ${activeSubTab === "Bracket" ? "bg-primary-container/10 border-primary text-primary" : "border-white/10 text-on-surface-variant hover:text-white"}`}
+                        >
+                            SIMULATION BRACKET TREE
+                        </button>
+                        <button 
+                            id="subtab-standings"
+                            onClick={() => setActiveSubTab("Standings")}
+                            className={`px-4 py-2 text-xs font-label-caps font-bold tracking-widest border ${activeSubTab === "Standings" ? "bg-primary-container/10 border-primary text-primary" : "border-white/10 text-on-surface-variant hover:text-white"}`}
+                        >
+                            SIMULATION PROBABILITIES
+                        </button>
+                    </div>
+
+                    {loadingFullSim ? (
+                        <div className="flex flex-col items-center justify-center py-24 gap-4">
+                            <span className="material-symbols-outlined text-4xl text-primary-fixed-dim animate-spin">sync</span>
+                            <p className="text-on-surface-variant text-sm">Evaluating match vectors across all 16 bracket nodes...</p>
+                        </div>
+                    ) : activeSubTab === "Bracket" ? (
+                        <div className="overflow-x-auto custom-scrollbar pb-6">
+                            {/* Render Bracket Tree (Left-to-Right layout) */}
+                            <div className="min-w-[1050px] grid grid-cols-5 gap-0 items-center py-4">
+                                
+                                {/* Round of 16 (4 matches) */}
+                                <div className="space-y-gutter flex flex-col justify-around h-[620px]">
+                                    <p className="font-label-caps text-label-caps text-on-surface-variant text-center opacity-40">ROUND OF 16</p>
+                                    {r16Matches.map((m, i) => (
+                                        <BracketSlot 
+                                            key={i} 
+                                            teamA={m.home} 
+                                            teamB={m.away} 
+                                            scoreA={m.home_goals} 
+                                            scoreB={m.away_goals} 
+                                            winner={m.winner} 
+                                            probA={m.probH} 
+                                            probB={m.probA} 
+                                            profiles={profiles}
+                                            standingsList={standingsList}
+                                        />
+                                    ))}
+                                </div>
+
+                                {/* Quarterfinals (2 matches) */}
+                                <div className="space-y-gutter flex flex-col justify-around h-[620px] pl-6">
+                                    <p className="font-label-caps text-label-caps text-on-surface-variant text-center opacity-40">QUARTER FINALS</p>
+                                    {qfMatches.map((m, i) => (
+                                        <BracketSlot 
+                                            key={i} 
+                                            teamA={m.home} 
+                                            teamB={m.away} 
+                                            scoreA={m.home_goals} 
+                                            scoreB={m.away_goals} 
+                                            winner={m.winner} 
+                                            probA={m.probH} 
+                                            probB={m.probA} 
+                                            profiles={profiles}
+                                            standingsList={standingsList}
+                                        />
+                                    ))}
+                                </div>
+
+                                {/* Semifinals (1 match) */}
+                                <div className="space-y-gutter flex flex-col justify-around h-[620px] pl-6">
+                                    <p className="font-label-caps text-label-caps text-on-surface-variant text-center opacity-40">SEMI FINALS</p>
+                                    {sfMatches.map((m, i) => (
+                                        <BracketSlot 
+                                            key={i} 
+                                            teamA={m.home} 
+                                            teamB={m.away} 
+                                            scoreA={m.home_goals} 
+                                            scoreB={m.away_goals} 
+                                            winner={m.winner} 
+                                            probA={m.probH} 
+                                            probB={m.probA} 
+                                            profiles={profiles}
+                                            standingsList={standingsList}
+                                            isSemi={true}
+                                        />
+                                    ))}
+                                </div>
+
+                                {/* Final (1 match) */}
+                                <div className="space-y-gutter flex flex-col justify-center h-[620px] pl-6">
+                                    <p className="font-label-caps text-label-caps text-on-surface-variant text-center opacity-40 mb-3">FINAL</p>
+                                    <div className="bg-surface-container-high p-4 border border-primary-fixed-dim/20 rounded-xl relative overflow-hidden slot-glow-high shadow-2xl">
+                                        <div className="absolute -right-4 -bottom-4 opacity-5 pointer-events-none">
+                                            <span className="material-symbols-outlined text-[90px]">sports_soccer</span>
+                                        </div>
+                                        <div className="relative z-10 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 group relative">
+                                                    <img className="w-5 h-4 object-contain border border-white/10" src={getFlagUrl(finalMatch.home)} alt="" />
+                                                    <span className={`font-display-md text-xl italic font-bold ${finalMatch.winner === finalMatch.home ? "text-primary-fixed-dim" : "text-white"}`}>{finalMatch.home}</span>
+                                                    <FloatingTooltip team={finalMatch.home} profiles={profiles} standingsList={standingsList} />
+                                                </div>
+                                                <span className="font-data-mono text-sm font-bold text-white bg-white/5 px-2 py-0.5 rounded">{finalMatch.home_goals}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 group relative">
+                                                    <img className="w-5 h-4 object-contain border border-white/10" src={getFlagUrl(finalMatch.away)} alt="" />
+                                                    <span className={`font-display-md text-xl italic font-bold ${finalMatch.winner === finalMatch.away ? "text-primary-fixed-dim" : "text-white"}`}>{finalMatch.away}</span>
+                                                    <FloatingTooltip team={finalMatch.away} profiles={profiles} standingsList={standingsList} />
+                                                </div>
+                                                <span className="font-data-mono text-sm font-bold text-white bg-white/5 px-2 py-0.5 rounded">{finalMatch.away_goals}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Champion spotlight */}
+                                <div className="h-[620px] flex items-center justify-center pl-6">
+                                    <div className="champion-glow bg-gradient-to-br from-surface-container-highest to-surface p-6 rounded-2xl text-center relative group w-full max-w-[240px] shadow-2xl">
+                                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(233,196,0,0.12)_0%,transparent_70%)]"></div>
+                                        <span className="material-symbols-outlined text-secondary-fixed-dim text-5xl mb-3 drop-shadow-[0_0_15px_rgba(233,196,0,0.5)]" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+                                        <p className="font-label-caps text-[10px] text-secondary-fixed-dim mb-1 tracking-widest font-bold">PREDICTED CHAMPION</p>
+                                        <h2 className="font-display-lg text-4xl text-white mb-2 italic font-extrabold tracking-tight uppercase">{champion}</h2>
+                                        
+                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary-fixed-dim/10 border border-secondary-fixed-dim/30 rounded-full mb-6">
+                                            <span className="font-data-mono text-[10px] text-secondary-fixed-dim font-bold uppercase">PROBABILITY: {isDemo ? "22.4%" : `${(standingsList[0]?.champion || 0).toFixed(1)}%`}</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 text-left">
+                                            <div className="bg-surface/50 p-2 border border-white/5 rounded">
+                                                <p className="font-label-caps text-[8px] text-on-surface-variant font-bold">GOLDEN BOOT</p>
+                                                <p className="font-headline-sm text-xs text-primary font-bold">{isDemo ? "K. MBAPPE" : "L. MESSI"}</p>
+                                            </div>
+                                            <div className="bg-surface/50 p-2 border border-white/5 rounded">
+                                                <p className="font-label-caps text-[8px] text-on-surface-variant font-bold">CLEAN SHEETS</p>
+                                                <p className="font-headline-sm text-xs text-primary font-bold">{isDemo ? "4" : "3"}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    ) : (
+                        /* Standings Tab Table */
+                        <div className="glass-card rounded-xl overflow-hidden shadow-2xl">
+                            <table className="w-full text-left text-xs">
+                                <thead className="bg-white/5 text-on-surface-variant font-label-caps font-bold">
+                                    <tr>
+                                        <th className="p-4 uppercase tracking-wider">Team</th>
+                                        <th className="p-4 uppercase tracking-wider">R16 Prob</th>
+                                        <th className="p-4 uppercase tracking-wider">QF Prob</th>
+                                        <th className="p-4 uppercase tracking-wider">SF Prob</th>
+                                        <th className="p-4 uppercase tracking-wider">Finals Prob</th>
+                                        <th className="p-4 uppercase tracking-wider text-primary">Champ Prob</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5 uppercase">
+                                    {standingsList.slice(0, 16).map(row => (
+                                        <tr key={row.team} className="hover:bg-white/5 transition-colors">
+                                            <td className="p-4 font-headline-sm text-sm font-bold text-white flex items-center gap-3">
+                                                <img className="w-6 h-6 object-contain" src={getFlagUrl(row.team)} alt="" />
+                                                {row.team}
+                                            </td>
+                                            <td className="p-4 font-data-mono">{row.r16 ? `${row.r16}%` : "-"}</td>
+                                            <td className="p-4 font-data-mono">{row.quarters ? `${row.quarters}%` : "-"}</td>
+                                            <td className="p-4 font-data-mono">{row.semis ? `${row.semis}%` : "-"}</td>
+                                            <td className="p-4 font-data-mono">{row.final ? `${row.final}%` : "-"}</td>
+                                            <td className="p-4 font-data-mono font-bold text-primary-fixed-dim">{row.champion ? `${row.champion}%` : "-"}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
+                    {/* Stats HUD row */}
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-surface-container-low border border-outline-variant/30 p-5 rounded-xl relative overflow-hidden shadow-lg">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-primary-fixed-dim"></div>
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="font-label-caps text-xs text-on-surface-variant font-bold">SIMULATION RELIABILITY</span>
+                                <span className="material-symbols-outlined text-primary-fixed-dim text-sm">verified</span>
+                            </div>
+                            <div className="text-2xl font-display-md text-white mb-2 italic font-extrabold">{reliability}</div>
+                            <p className="text-xs text-on-surface-variant leading-relaxed">{reliabilityDesc}</p>
+                        </div>
+                        <div className="bg-surface-container-low border border-outline-variant/30 p-5 rounded-xl relative overflow-hidden shadow-lg">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-tertiary-fixed-dim"></div>
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="font-label-caps text-xs text-on-surface-variant font-bold">UNDERDOG TRENDS</span>
+                                <span className="material-symbols-outlined text-tertiary-fixed-dim text-sm font-bold">trending_up</span>
+                            </div>
+                            <div className="text-2xl font-display-md text-white mb-2 italic font-extrabold">{underdogTrend}</div>
+                            <p className="text-xs text-on-surface-variant leading-relaxed">{underdogDesc}</p>
+                        </div>
+                        <div className="bg-surface-container-low border border-outline-variant/30 p-5 rounded-xl relative overflow-hidden shadow-lg">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-secondary-fixed-dim"></div>
+                            <div className="flex justify-between items-start mb-2">
+                                <span className="font-label-caps text-xs text-on-surface-variant font-bold">TACTICAL FIXTURE TREND</span>
+                                <span className="material-symbols-outlined text-secondary-fixed-dim text-sm">swords</span>
+                            </div>
+                            <div className="text-2xl font-display-md text-white mb-2 italic font-extrabold">{matchTournament}</div>
+                            <p className="text-xs text-on-surface-variant leading-relaxed">{matchDesc}</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Bracket Match Slot with Hover-card dynamic tooltips
+        function BracketSlot({ teamA, teamB, scoreA, scoreB, winner, probA, probB, profiles, standingsList, isSemi }) {
+            const getScoreDisplay = (team, score, probability) => {
+                if (score !== undefined) {
+                    return score;
+                }
+                return probability ? `${probability}%` : "";
+            };
+
+            return (
+                <div className={`space-y-1 relative group w-full ${isSemi ? 'scale-105 z-20' : ''}`}>
+                    {/* Team A Slot */}
+                    <div className={`bg-surface-container p-2 flex items-center justify-between border cursor-pointer hover:border-primary transition-all ${winner === teamA ? "slot-glow-high border-primary-fixed-dim/30" : "slot-glow-dim border-outline-variant/50"}`}>
+                        <div className="flex items-center gap-2 group relative">
+                            <img className="w-5 h-4 object-contain border border-white/10" src={getFlagUrl(teamA)} alt="" />
+                            <span className={`font-headline-sm text-xs font-semibold ${winner === teamA ? "text-primary-fixed-dim font-bold" : "text-on-surface-variant"}`}>
+                                {teamA}
+                            </span>
+                            <FloatingTooltip team={teamA} profiles={profiles} standingsList={standingsList} />
+                        </div>
+                        <span className={`font-data-mono text-xs ${winner === teamA ? "text-primary-fixed-dim font-bold" : "text-on-surface-variant"}`}>
+                            {getScoreDisplay(teamA, scoreA, probA)}
+                        </span>
+                    </div>
+
+                    {/* Team B Slot */}
+                    <div className={`bg-surface-container p-2 flex items-center justify-between border cursor-pointer hover:border-primary transition-all ${winner === teamB ? "slot-glow-high border-primary-fixed-dim/30" : "slot-glow-dim border-outline-variant/50"}`}>
+                        <div className="flex items-center gap-2 group relative">
+                            <img className="w-5 h-4 object-contain border border-white/10" src={getFlagUrl(teamB)} alt="" />
+                            <span className={`font-headline-sm text-xs font-semibold ${winner === teamB ? "text-primary-fixed-dim font-bold" : "text-on-surface-variant"}`}>
+                                {teamB}
+                            </span>
+                            <FloatingTooltip team={teamB} profiles={profiles} standingsList={standingsList} />
+                        </div>
+                        <span className={`font-data-mono text-xs ${winner === teamB ? "text-primary-fixed-dim font-bold" : "text-on-surface-variant"}`}>
+                            {getScoreDisplay(teamB, scoreB, probB)}
+                        </span>
+                    </div>
+                </div>
+            );
+        }
+
+        // Bracket Live hover tooltip panel
+        function FloatingTooltip({ team, profiles, standingsList }) {
+            const p = profiles[team] || {};
+            const sim = (standingsList || []).find(x => x.team === team) || {};
+            
+            // Format squad value
+            const valMillions = p.tm_total_value ? (p.tm_total_value / 1e6).toFixed(0) : "N/A";
+            const eloValue = p.elo ? Math.round(p.elo) : "N/A";
+
+            // Rank calculation
+            const eloPoints = p.elo || 0;
+            const rank = p.fifa_points ? `RANK #${~~(32 - (p.fifa_points / 60))}` : "RANK #12";
+
+            // Simulated progress percentage
+            const progressPct = sim.champion || 5.0;
+
+            return (
+                <div className="tooltip-box absolute left-0 bottom-full mb-3.5 w-64 bg-surface-container-highest border border-primary-fixed-dim/40 p-4 rounded-xl shadow-2xl z-50 pointer-events-none backdrop-blur-xl">
+                    <div className="flex items-center justify-between mb-3 border-b border-outline-variant/30 pb-2">
+                        <span className="font-display-md text-sm text-white font-bold italic tracking-wide uppercase">{team}</span>
+                        <span className="bg-primary-fixed-dim text-background px-1.5 py-0.5 font-data-mono text-[9px] font-bold rounded-sm">{rank}</span>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-xs">
+                            <span className="text-on-surface-variant">Champ Probability</span>
+                            <span className="text-primary-fixed-dim font-bold">{progressPct.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-surface-container h-1 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary-fixed-dim" style={{ width: `${progressPct * 3.5}%` }}></div>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-on-surface-variant pt-1">
+                            <span>ELO: {eloValue}</span>
+                            <span>SQUAD: €{valMillions}M</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // 4. MODEL INSIGHTS VIEW COMPONENT
+        // ==========================================
+        function InsightsView({ insights, loadingInsights, dataSource }) {
+            const isDemo = dataSource === "Demo";
+
+            const logLoss = isDemo ? MOCK_DATA.insights.logloss : (insights?.metrics?.poisson_logloss || 0.99);
+            const rocAuc = isDemo ? MOCK_DATA.insights.auc : 0.762; // model score metrics
+            const importanceList = isDemo ? MOCK_DATA.insights.importance : (insights?.xgb_importances || []);
+
+            const poissonCoefs = insights?.poisson_coefs || [
+                { feature: "elo_diff", coef: 0.0014, p_value: 0.000, significant: true },
+                { feature: "fifa_points_diff", coef: 0.0005, p_value: 0.012, significant: true },
+                { feature: "tm_val_log_ratio", coef: 0.0820, p_value: 0.022, significant: true },
+                { feature: "is_home", coef: 0.1250, p_value: 0.040, significant: true },
+                { feature: "host_boost", coef: 0.2201, p_value: 0.003, significant: true }
+            ];
+
+            return (
+                <div className="max-w-[1100px] mx-auto px-6 py-8 space-y-6">
+                    {/* Header Section */}
+                    <div className="glass-card rounded-xl p-6 border border-primary/10 shadow-2xl flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <span className="w-2 h-2 bg-primary-fixed-dim rounded-full live-dot"></span>
+                                <span className="font-label-caps text-[10px] text-primary-fixed-dim font-bold">MODEL VER. 2.4.0</span>
+                            </div>
+                            <h1 className="font-display-md text-2xl text-on-background uppercase font-bold italic tracking-tight">Model Insights</h1>
+                            <p className="text-xs text-on-surface-variant max-w-xl mt-1">Deep-dive technical coefficient significances and cross-validated log-losses</p>
+                        </div>
+                        <div className="flex gap-2 relative z-10">
+                            <div className="bg-surface-container-low border border-outline-variant/30 px-5 py-2 rounded flex flex-col">
+                                <span className="font-label-caps text-[9px] text-on-surface-variant opacity-60 font-bold">LOG LOSS</span>
+                                <span className="font-data-mono text-primary-fixed-dim font-bold text-base">{logLoss}</span>
+                            </div>
+                            <div className="bg-surface-container-low border border-outline-variant/30 px-5 py-2 rounded flex flex-col">
+                                <span className="font-label-caps text-[9px] text-on-surface-variant opacity-60 font-bold">ROC AUC</span>
+                                <span className="font-data-mono text-primary-fixed-dim font-bold text-base">{rocAuc}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        {/* Left column */}
+                        <div className="lg:col-span-8 space-y-6">
+                            {/* Feature Importance Card */}
+                            <section className="glass-panel rounded-xl p-6 glow-green relative overflow-hidden shadow-2xl">
+                                <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+                                    <span className="material-symbols-outlined text-[120px]">bar_chart_4_bars</span>
+                                </div>
+                                <div className="flex items-center justify-between mb-6 relative z-10">
+                                    <div>
+                                        <h2 className="font-headline-lg text-base text-primary font-bold uppercase tracking-wider">Feature Importance weights</h2>
+                                        <p className="text-on-surface-variant text-xs mt-0.5">XGBoost validation gradient weights</p>
+                                    </div>
+                                    <span className="material-symbols-outlined text-outline">info</span>
+                                </div>
+                                <div className="space-y-4 relative z-10">
+                                    {importanceList.slice(0, 5).map((row, i) => (
+                                        <div key={row.feature} className="space-y-1.5 group">
+                                            <div className="flex justify-between items-end">
+                                                <span className="font-label-caps text-[10px] text-on-surface font-bold tracking-wider">{row.feature.replace("_diff", "").replace("_standardized", "").toUpperCase()}</span>
+                                                <span className="font-data-mono text-primary-fixed-dim font-bold text-xs">{row.importance || row.coef}%</span>
+                                            </div>
+                                            <div className="h-2.5 bg-surface-container-highest rounded-full overflow-hidden flex items-center px-0.5">
+                                                <div 
+                                                    style={{ width: `${row.importance || 20}%` }} 
+                                                    className="h-1.5 rounded-full segmented-bar transition-all duration-1000 group-hover:brightness-125 shadow-[0_0_10px_rgba(0,230,57,0.3)]"
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Calibration Plot Card */}
+                            <section className="glass-panel rounded-xl p-6 border border-outline-variant/20 shadow-2xl">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h2 className="font-headline-lg text-base text-white font-bold uppercase tracking-wider">Calibration Plot</h2>
+                                        <p className="text-on-surface-variant text-xs mt-0.5">Predicted probability vs. Actual outcome density frequencies</p>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-3 h-0.5 bg-primary-fixed-dim"></span>
+                                            <span className="text-[9px] font-label-caps text-on-surface-variant font-bold">GB-MODEL</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-3 h-0.5 border-t border-dashed border-outline"></span>
+                                            <span className="text-[9px] font-label-caps text-on-surface-variant font-bold">PERFECT</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Custom SVG Line chart */}
+                                <div className="h-60 w-full relative border-l border-b border-outline-variant/30 mt-6 pb-2">
+                                    <div className="absolute -left-9 top-0 h-full flex flex-col justify-between text-[9px] font-data-mono text-on-surface-variant py-1">
+                                        <span>1.0</span><span>0.8</span><span>0.6</span><span>0.4</span><span>0.2</span><span>0.0</span>
+                                    </div>
+                                    <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none">
+                                        {/* Perfect line */}
+                                        <line stroke="#84967e" strokeDasharray="4,4" strokeWidth="1" x1="0" x2="100%" y1="100%" y2="0"></line>
+                                        {/* Model path line */}
+                                        <path 
+                                            class="drop-shadow-[0_0_8px_rgba(0,230,57,0.5)]" 
+                                            d="M 0 240 Q 60 210 120 180 T 240 120 T 360 80 T 480 30 T 600 0" 
+                                            fill="none" 
+                                            stroke="#00e639" 
+                                            strokeWidth="2.5" 
+                                            vectorEffect="non-scaling-stroke"
+                                        ></path>
+                                        {/* Scatter dots */}
+                                        <circle cx="20%" cy="80%" fill="#00e639" r="4.5" className="glow-green"></circle>
+                                        <circle cx="40%" cy="60%" fill="#00e639" r="4.5" className="glow-green"></circle>
+                                        <circle cx="60%" cy="38%" fill="#00e639" r="4.5" className="glow-green"></circle>
+                                        <circle cx="80%" cy="16%" fill="#00e639" r="4.5" className="glow-green"></circle>
+                                    </svg>
+                                    <div className="absolute inset-0 flex flex-col justify-between opacity-5 pointer-events-none">
+                                        {[...Array(5)].map((_, i) => <div key={i} className="border-t border-outline h-0"></div>)}
+                                    </div>
+                                </div>
+                                <div className="flex justify-between text-[9px] font-data-mono text-on-surface-variant mt-2 px-1">
+                                    <span>0.0</span><span>0.2</span><span>0.4</span><span>0.6</span><span>0.8</span><span>1.0</span>
+                                </div>
+                            </section>
+                        </div>
+
+                        {/* Right column */}
+                        <div className="lg:col-span-4 space-y-6">
+                            {/* Engine Architecture */}
+                            <section className="bg-surface-container-low rounded-xl border border-outline-variant/30 overflow-hidden shadow-2xl">
+                                <div className="bg-surface-variant/20 p-4 border-b border-outline-variant/30">
+                                    <h2 className="font-headline-lg text-sm flex items-center gap-2 font-bold text-white">
+                                        <span className="material-symbols-outlined text-primary text-base">psychology</span>
+                                        ENGINE ARCHITECTURE
+                                    </h2>
+                                </div>
+                                <div className="p-5 space-y-5">
+                                    <div className="space-y-1">
+                                        <h3 className="font-label-caps text-[10px] text-primary-fixed-dim font-bold">01. FEATURE CODES</h3>
+                                        <p className="text-xs text-on-surface-variant leading-relaxed">
+                                            Aggregates ELO ratings history, EWA metrics, and relative squad Transfermarkt evaluations into unified feature vectors.
+                                        </p>
+                                    </div>
+                                    <div className="h-px bg-outline-variant/15"></div>
+                                    <div className="space-y-1">
+                                        <h3 className="font-label-caps text-[10px] text-primary-fixed-dim font-bold">02. POISSON GOALS MODEL</h3>
+                                        <p className="text-xs text-on-surface-variant leading-relaxed">
+                                            Calculates expected home/away goals (lambda parameters) to model goals densities using Poisson log probability link functions.
+                                        </p>
+                                    </div>
+                                    <div className="h-px bg-outline-variant/15"></div>
+                                    <div className="space-y-1">
+                                        <h3 className="font-label-caps text-[10px] text-primary-fixed-dim font-bold">03. MONTE CARLO SIMULATOR</h3>
+                                        <p className="text-xs text-on-surface-variant leading-relaxed">
+                                            Evaluates group stage round-robins and knockout brackets across 50,000 runs to map championship probabilities.
+                                        </p>
+                                    </div>
+                                    <div className="bg-primary/5 rounded p-3 border border-primary/20 mt-4">
+                                        <p className="text-[10px] font-data-mono text-primary-fixed-dim text-center">VALIDATED COEF RATIO | BIAS CALIBRATION SYNC</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* Small metric boxes */}
+                            <div className="glass-panel p-5 rounded-xl flex items-center justify-between shadow-lg">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center text-primary">
+                                        <span className="material-symbols-outlined text-base">storage</span>
+                                    </div>
+                                    <div>
+                                        <p className="font-label-caps text-[9px] text-on-surface-variant font-bold">DATA INSTANCES</p>
+                                        <p className="font-data-mono text-base font-bold text-white">1.24M+</p>
+                                    </div>
+                                </div>
+                                <span className="material-symbols-outlined text-outline">trending_up</span>
+                            </div>
+
+                            <div className="glass-panel p-5 rounded-xl flex items-center justify-between shadow-lg">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center text-primary">
+                                        <span className="material-symbols-outlined text-base">bolt</span>
+                                    </div>
+                                    <div>
+                                        <p className="font-label-caps text-[9px] text-on-surface-variant font-bold">REFRESH SYNCS</p>
+                                        <p className="font-data-mono text-base font-bold text-white">0.4s</p>
+                                    </div>
+                                </div>
+                                <span className="material-symbols-outlined text-outline">sync</span>
+                            </div>
+
+                            {/* Decorative Accent Graphic */}
+                            <div className="relative h-32 rounded-xl overflow-hidden bg-primary-fixed-dim shadow-xl">
+                                <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBFEV1Rtg3rJ50NDuL27SK7ecfpWy7831Tk5cjUxNBzrdXiAkediLzcu8QtDZzc7R7UGztAhEKAfTCqRWtTuzUGXrXvsWDJ7LLRfJWSrsFznPn9rmYnuKu_Pl-xfcs4M-J4MKifBG1UIBmW7K00SjUwZTWThkzHXNTaw_uvxltZXdI_1TtfCBzdePDps2-ViT_qrZVDw2SVne8XhB8JEUQ-LH9AH9h4d0NR2C09yZ0-kr0QF2APvsOedsNR0mfesX9TPyxR3e2Go44')", backgroundSize: 'cover' }}></div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                                <div className="absolute bottom-0 left-0 p-4">
+                                    <p className="font-display-md text-xl text-background italic font-extrabold uppercase tracking-tight leading-none">THE ROAD TO WORLD CHAMPIONSHIP</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Mount the React Application
+        const container = document.getElementById("root");
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>{% endraw %}
